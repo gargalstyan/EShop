@@ -1,6 +1,8 @@
 using EShop.Data.Context;
 using EShop.Data.Entitiy;
 using Microsoft.EntityFrameworkCore;
+using System.Transactions;
+
 namespace EShop.Forms
 {
     public partial class MainForm : Form
@@ -18,7 +20,7 @@ namespace EShop.Forms
             {
 
                 dgv.DataSource = shopDbContext.Products.ToList();
-                ComboBox.Items.AddRange(shopDbContext.Shops.Select(p => p.Name).Distinct().ToArray());
+                ComboBox.Items.AddRange(shopDbContext.Shops./*Select(p => p.Name).Distinct().*/ToArray());
             }
         }
 
@@ -70,11 +72,14 @@ namespace EShop.Forms
 
         private void btnFind_Click(object sender, EventArgs e)
         {
-            string nameOfProduct = ComboBox.Text;
-            using(ShopDbContext shopDbContext = new ShopDbContext())
+            var shop = ComboBox.SelectedItem as Shop;
+            if (shop != null)
             {
-                var shop = shopDbContext.Shops.FirstOrDefault(p => p.Name == nameOfProduct);
-                dgv.DataSource = shopDbContext.Products.Where(p => p.ShopId == shop.ID).ToList();
+                using (ShopDbContext shopDbContext = new ShopDbContext())
+                {
+                    var filtredShop = shopDbContext.Shops.SingleOrDefault(s => s.ID == shop.ID);
+                    dgv.DataSource = shopDbContext.Products.Where(p => p.ShopId == filtredShop.ID).ToList();
+                }
             }
         }
 
@@ -85,7 +90,7 @@ namespace EShop.Forms
             {
 
                 dgv.DataSource = shopDbContext.Products.ToList();
-                ComboBox.Items.AddRange(shopDbContext.Shops.Select(p => p.Name).Distinct().ToArray());
+                ComboBox.Items.AddRange(shopDbContext.Shops./*Select(p => p.Name).Distinct().*/ToArray());
             }
         }
 
@@ -97,6 +102,7 @@ namespace EShop.Forms
                 var productForDelete = shopDbContext.Products.SingleOrDefault(p => p.ID == id);
                 shopDbContext.Products.Remove(productForDelete);
                 shopDbContext.SaveChanges();
+
                 dgv.DataSource = shopDbContext.Products.ToList();
             }
         }
